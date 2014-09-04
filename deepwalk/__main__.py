@@ -18,6 +18,7 @@ from six import iteritems
 logger = logging.getLogger(__name__)
 LOGFORMAT = "%(asctime).19s %(levelname)s %(filename)s: %(lineno)s %(message)s"
 
+
 def debug(type_, value, tb):
   if hasattr(sys, 'ps1') or not sys.stderr.isatty():
     sys.__excepthook__(type_, value, tb)
@@ -28,10 +29,18 @@ def debug(type_, value, tb):
     print(u"\n")
     pdb.pm()
 
+
 def process(args):
 
-  G = graph.load_adjacencylist(args.input, undirected=True)
-  
+  if args.format == "adjlist":
+    G = graph.load_adjacencylist(args.input, undirected=args.undirected)
+  elif args.format == "edgelist":
+    G = graph.load_edgelist(args.input, undirected=args.undirected)
+  elif args.format == "mat":
+    G = graph.load_matfile(args.input, variable_name=args.matfile_variable_name, undirected=args.undirected)
+  else:
+    raise Exception("Unknown file format: '%s'.  Valid formats: 'adjlist', 'edgelist', 'mat'" % args.format)
+
   print("Number of nodes: {}".format(len(G.nodes())))
 
   walks = graph.build_deepwalk_corpus(G, num_paths=args.number_walks, path_length=args.walk_length, alpha=0, rand=random.Random(args.seed))
@@ -42,25 +51,37 @@ def process(args):
 
   model.save_word2vec_format(args.output)
 
+
 def main():
   parser = ArgumentParser("deepwalk",
                           formatter_class=ArgumentDefaultsHelpFormatter,
                           conflict_handler='resolve')
-  parser.add_argument('--format', default='text', help='File format')
+  parser.add_argument('--format', default='adjlist',
+                      help='File format of input file')
+  parser.add_argument('--matfile-variable-name', default='network',
+                      help='variable name of adjacency matrix inside a .mat file.')
   parser.add_argument('--workers', default=1, type=int,
                       help='Number of parallel processes.')
-  parser.add_argument('--input', nargs='?',
-                      default=sys.stdin)
-  parser.add_argument('--output')
-  parser.add_argument("-l", "--log", dest="log", help="log verbosity level",
-                      default="INFO")
+  parser.add_argument('--input', nargs='?', required=True,
+                      help='Input graph file')
+  parser.add_argument('--output', required=True,
+                      help='Output representation file')
+  parser.add_argument("-l", "--log", dest="log", default="INFO",
+                      help="log verbosity level")
   parser.add_argument("--debug", dest="debug", action='store_true', default=False,
                       help="drop a debugger if an exception is raised.")
-  parser.add_argument('--walk-length', default=40, type=int, help='Length of the random walk started at each node')
-  parser.add_argument('--number-walks', default=10, type=int, help='Number of random walks to start at each node')
-  parser.add_argument('--representation-size', default=64, type=int, help='Number of latent dimensions to learn for each node.')
-  parser.add_argument('--window-size', default=5, type=int, help='Window size of skipgram model.')
-  parser.add_argument('--seed', default=0, type=int, help='Seed for random walk generator.')
+  parser.add_argument('--walk-length', default=40, type=int,
+                      help='Length of the random walk started at each node')
+  parser.add_argument('--number-walks', default=10, type=int,
+                      help='Number of random walks to start at each node')
+  parser.add_argument('--representation-size', default=64, type=int,
+                      help='Number of latent dimensions to learn for each node.')
+  parser.add_argument('--window-size', default=5, type=int,
+                      help='Window size of skipgram model.')
+  parser.add_argument('--seed', default=0, type=int,
+                      help='Seed for random walk generator.')
+  parser.add_argument('--undirected', default=True, type=bool,
+                      help='Treat graph as undirected.')
 
   args = parser.parse_args()
   numeric_level = getattr(logging, args.log.upper(), None)
@@ -68,7 +89,7 @@ def main():
   logger.setLevel(numeric_level)
 
   if args.debug:
-   sys.excepthook = debug 
+   sys.excepthook = debug
 
   process(args)
 

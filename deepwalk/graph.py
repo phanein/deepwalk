@@ -17,6 +17,8 @@ from multiprocessing import cpu_count
 import random
 from random import shuffle
 from itertools import product,permutations
+from scipy.io import loadmat
+from scipy.sparse import issparse
 
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
@@ -232,7 +234,7 @@ def load_adjacencylist(file_, undirected=False, chunksize=10000, unchecked=True)
   return G 
 
 
-def load_edgelist(file_):
+def load_edgelist(file_, undirected=True):
   G = Graph()
   with open(file_) as f:
     for l in f:
@@ -246,6 +248,14 @@ def load_edgelist(file_):
   G.make_consistent()
   return G
 
+
+def load_matfile(file_, variable_name="network", undirected=True):
+  mat_varables = loadmat(file_)
+  mat_matrix = mat_varables[variable_name]
+
+  return from_numpy(mat_matrix, undirected)
+
+
 def from_networkx(G_input, undirected=True):
     G = Graph()
 
@@ -258,15 +268,23 @@ def from_networkx(G_input, undirected=True):
 
     return G
 
-def from_numpy(x):
+
+def from_numpy(x, undirected=True):
     G = Graph()
 
-    # TODO add handling for dense numpy too
-    cx = x.tocoo()    
-    for i,j,v in zip(cx.row, cx.col, cx.data):
-        G[i].add(j)
+    if issparse(x):
+        cx = x.tocoo()
+        for i,j,v in zip(cx.row, cx.col, cx.data):
+            G[i].append(j)
+    else:
+      raise Exception("Dense matrices not yet supported.")
+
+    if undirected:
+        G.make_undirected()
+
     G.make_consistent()
     return G
+
 
 def from_adjlist(adjlist):
     G = Graph()
@@ -277,6 +295,7 @@ def from_adjlist(adjlist):
         G[node] = list(sorted(set(neighbors)))
 
     return G
+
 
 def from_adjlist_unchecked(adjlist):
     G = Graph()
