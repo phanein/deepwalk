@@ -54,7 +54,7 @@ def write_walks_to_disk(G, filebase, num_paths, path_length, alpha=0, rand=rando
       else:
         files.append(file_)
 
-  with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
+  with ProcessPoolExecutor(max_workers=num_workers) as executor:
     for file_ in executor.map(_write_walks_to_disk, args_list):
       files.append(file_)
 
