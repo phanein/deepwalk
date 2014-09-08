@@ -10,6 +10,7 @@ from concurrent.futures import ProcessPoolExecutor
 import logging
 
 from deepwalk import graph
+from deepwalk import walks as serialized_walks
 from gensim.models import Word2Vec
 
 from six import text_type as unicode
@@ -43,11 +44,34 @@ def process(args):
 
   print("Number of nodes: {}".format(len(G.nodes())))
 
-  walks = graph.build_deepwalk_corpus(G, num_paths=args.number_walks, path_length=args.walk_length, alpha=0, rand=random.Random(args.seed))
+  num_walks = len(G.nodes()) * args.number_walks
 
-  print("Number of walks: {}".format(len(walks)))
+  print("Number of walks: {}".format(num_walks))
 
-  model = Word2Vec(walks, size=args.representation_size, window=args.window_size, min_count=0, workers=args.workers)
+  data_size = num_walks * args.walk_length
+
+  print("Data size (walks*length): {}".format(data_size))
+
+  if data_size < args.max_memory_data_size:
+    print("Walking...")
+    walks = graph.build_deepwalk_corpus(G, num_paths=args.number_walks,
+                                        path_length=args.walk_length, alpha=0, rand=random.Random(args.seed))
+    print("Training...")
+    model = Word2Vec(walks, size=args.representation_size, window=args.window_size, min_count=0, workers=args.workers)
+  else:
+    print("Data size {} is larger than limit (max-memory-data-size: {}).  Dumping walks to disk.".format(data_size, args.max_memory_data_size))
+    print("Walking...")
+
+    walks_filebase = args.output + ".walks"
+    walk_files = serialized_walks.write_walks_to_disk(G, walks_filebase, num_paths=args.number_walks,
+                                         path_length=args.walk_length, alpha=0, rand=random.Random(args.seed),
+                                         num_workers=args.workers)
+
+    print walk_files
+
+    print("Training...")
+    model = Word2Vec(serialized_walks.combine_files_iter(walk_files), size=args.representation_size,
+                     window=args.window_size, min_count=0, workers=args.workers)
 
   model.save_word2vec_format(args.output)
 
@@ -56,32 +80,49 @@ def main():
   parser = ArgumentParser("deepwalk",
                           formatter_class=ArgumentDefaultsHelpFormatter,
                           conflict_handler='resolve')
-  parser.add_argument('--format', default='adjlist',
-                      help='File format of input file')
-  parser.add_argument('--matfile-variable-name', default='network',
-                      help='variable name of adjacency matrix inside a .mat file.')
-  parser.add_argument('--workers', default=1, type=int,
-                      help='Number of parallel processes.')
-  parser.add_argument('--input', nargs='?', required=True,
-                      help='Input graph file')
-  parser.add_argument('--output', required=True,
-                      help='Output representation file')
-  parser.add_argument("-l", "--log", dest="log", default="INFO",
-                      help="log verbosity level")
+
   parser.add_argument("--debug", dest="debug", action='store_true', default=False,
                       help="drop a debugger if an exception is raised.")
-  parser.add_argument('--walk-length', default=40, type=int,
-                      help='Length of the random walk started at each node')
+
+  parser.add_argument('--format', default='adjlist',
+                      help='File format of input file')
+
+  parser.add_argument('--input', nargs='?', required=True,
+                      help='Input graph file')
+
+  parser.add_argument("-l", "--log", dest="log", default="INFO",
+                      help="log verbosity level")
+
+  parser.add_argument('--matfile-variable-name', default='network',
+                      help='variable name of adjacency matrix inside a .mat file.')
+
+  parser.add_argument('--max-memory-data-size', default=1000000000, type=int,
+                      help='Size to start dumping walks to disk, instead of keeping them in memory.')
+
   parser.add_argument('--number-walks', default=10, type=int,
                       help='Number of random walks to start at each node')
+
+  parser.add_argument('--output', required=True,
+                      help='Output representation file')
+
   parser.add_argument('--representation-size', default=64, type=int,
                       help='Number of latent dimensions to learn for each node.')
-  parser.add_argument('--window-size', default=5, type=int,
-                      help='Window size of skipgram model.')
+
   parser.add_argument('--seed', default=0, type=int,
                       help='Seed for random walk generator.')
+
   parser.add_argument('--undirected', default=True, type=bool,
                       help='Treat graph as undirected.')
+
+  parser.add_argument('--walk-length', default=40, type=int,
+                      help='Length of the random walk started at each node')
+
+  parser.add_argument('--window-size', default=5, type=int,
+                      help='Window size of skipgram model.')
+
+  parser.add_argument('--workers', default=1, type=int,
+                      help='Number of parallel processes.')
+
 
   args = parser.parse_args()
   numeric_level = getattr(logging, args.log.upper(), None)

@@ -3,7 +3,6 @@
 
 """Graph utilities."""
 
-from argparse import ArgumentParser
 import logging
 import sys
 from io import open
@@ -21,7 +20,6 @@ from scipy.io import loadmat
 from scipy.sparse import issparse
 
 from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures import ThreadPoolExecutor
 
 from multiprocessing import Pool
 from multiprocessing import cpu_count
@@ -166,6 +164,18 @@ def build_deepwalk_corpus(G, num_paths, path_length, alpha=0,
       walks.append(G.random_walk(path_length, rand=rand, alpha=alpha, start=node))
   
   return walks
+
+def build_deepwalk_corpus_iter(G, num_paths, path_length, alpha=0,
+                      rand=random.Random(0)):
+  walks = []
+
+  nodes = list(G.nodes())
+
+  for cnt in range(num_paths):
+    rand.shuffle(nodes)
+    for node in nodes:
+      yield G.random_walk(path_length, rand=rand, alpha=alpha, start=node)
+
 
 def clique(size):
     return from_adjlist(permutations(range(1,size+1)))
