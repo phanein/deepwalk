@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 import random
 from io import open
@@ -16,6 +17,13 @@ from skipgram import Skipgram
 
 from six import text_type as unicode
 from six import iteritems
+from six.moves import range
+
+import psutil
+from multiprocessing import cpu_count
+
+p = psutil.Process(os.getpid())
+p.set_cpu_affinity(list(range(cpu_count())))
 
 logger = logging.getLogger(__name__)
 LOGFORMAT = "%(asctime).19s %(levelname)s %(filename)s: %(lineno)s %(message)s"
@@ -68,11 +76,15 @@ def process(args):
                                          path_length=args.walk_length, alpha=0, rand=random.Random(args.seed),
                                          num_workers=args.workers)
 
-    # use degree distribution for frequency in tree
-    vertex_frequency = G.degree(nodes=G.iterkeys())
+    print("Counting vertex frequency...")
+    if not args.vertex_freq_degree:
+      vertex_counts = serialized_walks.count_textfiles(walk_files, args.workers)
+    else:
+      # use degree distribution for frequency in tree
+      vertex_counts = G.degree(nodes=G.iterkeys())
 
     print("Training...")
-    model = Skipgram(sentences=serialized_walks.combine_files_iter(walk_files), vocabulary_counts=vertex_frequency,
+    model = Skipgram(sentences=serialized_walks.combine_files_iter(walk_files), vocabulary_counts=vertex_counts,
                      size=args.representation_size,
                      window=args.window_size, min_count=0, workers=args.workers)
 
@@ -116,6 +128,11 @@ def main():
 
   parser.add_argument('--undirected', default=True, type=bool,
                       help='Treat graph as undirected.')
+
+  parser.add_argument('--vertex-freq-degree', default=False, action='store_true',
+                      help='Use vertex degree to estimate the frequency of nodes '
+                           'in the random walks. This option is faster than '
+                           'calculating the vocabulary.')
 
   parser.add_argument('--walk-length', default=40, type=int,
                       help='Length of the random walk started at each node')

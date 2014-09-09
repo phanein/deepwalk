@@ -2,10 +2,12 @@ import logging
 from io import open
 from os import path
 from time import time
-from itertools import izip
 from multiprocessing import cpu_count
 import random
 from concurrent.futures import ProcessPoolExecutor
+from collections import Counter
+
+from six.moves import zip
 
 from deepwalk import graph
 
@@ -15,6 +17,29 @@ __current_graph = None
 
 # speed up the string encoding
 __vertex2str = None
+
+def count_words(file):
+  """ Counts the word frequences in a list of sentences.
+
+  Note:
+    This is a helper function for parallel execution of `Vocabulary.from_text`
+    method.
+  """
+  c = Counter()
+  with open(file, 'r') as f:
+    for l in f:
+      words = l.strip().split()
+      c.update(words)
+  return c
+
+
+def count_textfiles(files, workers=1):
+  c = Counter()
+  with ProcessPoolExecutor(max_workers=workers) as executor:
+    for c_ in executor.map(count_words, files):
+      c.update(c_)
+  return c
+
 
 def count_lines(f):
   if path.isfile(f):
@@ -52,7 +77,7 @@ def write_walks_to_disk(G, filebase, num_paths, path_length, alpha=0, rand=rando
                         for x in graph.grouper(int(num_paths / num_workers)+1, range(1, num_paths+1))]
 
   with ProcessPoolExecutor(max_workers=num_workers) as executor:
-    for size, file_, ppw in izip(executor.map(count_lines, files_list), files_list, paths_per_worker):
+    for size, file_, ppw in zip(executor.map(count_lines, files_list), files_list, paths_per_worker):
       if always_rebuild or size != (ppw*expected_size):
         args_list.append((ppw, path_length, alpha, random.Random(rand.randint(0, 2**31)), file_))
       else:
