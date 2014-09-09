@@ -24,7 +24,7 @@ from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Pool
 from multiprocessing import cpu_count
 
-logger = logging.getLogger("graphs")
+logger = logging.getLogger("deepwalk")
 
 
 __author__ = "Bryan Perozzi"

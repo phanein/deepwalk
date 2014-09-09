@@ -12,6 +12,7 @@ import logging
 from deepwalk import graph
 from deepwalk import walks as serialized_walks
 from gensim.models import Word2Vec
+from skipgram import Skipgram
 
 from six import text_type as unicode
 from six import iteritems
@@ -67,10 +68,12 @@ def process(args):
                                          path_length=args.walk_length, alpha=0, rand=random.Random(args.seed),
                                          num_workers=args.workers)
 
-    print walk_files
+    # use degree distribution for frequency in tree
+    vertex_frequency = G.degree(nodes=G.iterkeys())
 
     print("Training...")
-    model = Word2Vec(serialized_walks.combine_files_iter(walk_files), size=args.representation_size,
+    model = Skipgram(sentences=serialized_walks.combine_files_iter(walk_files), vocabulary_counts=vertex_frequency,
+                     size=args.representation_size,
                      window=args.window_size, min_count=0, workers=args.workers)
 
   model.save_word2vec_format(args.output)

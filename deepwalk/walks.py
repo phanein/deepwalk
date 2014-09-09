@@ -45,7 +45,11 @@ def write_walks_to_disk(G, filebase, num_paths, path_length, alpha=0, rand=rando
   args_list = []
   files = []
 
-  paths_per_worker = [len(filter(lambda x: x!= None, x)) for x in graph.grouper(num_workers, range(0, num_paths))]
+  if num_paths <= num_workers:
+    paths_per_worker = [1 for x in range(num_paths)]
+  else:
+    paths_per_worker = [len(filter(lambda z: z!= None, [y for y in x]))
+                        for x in graph.grouper(int(num_paths / num_workers)+1, range(1, num_paths+1))]
 
   with ProcessPoolExecutor(max_workers=num_workers) as executor:
     for size, file_, ppw in izip(executor.map(count_lines, files_list), files_list, paths_per_worker):
