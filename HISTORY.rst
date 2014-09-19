@@ -3,7 +3,7 @@
 History
 -------
 
-1.0.0 (2014-09-19)
+1.0.1 (2014-09-19)
 ---------------------
 
 * Added utilities to support generated embeddings for larger graphs
