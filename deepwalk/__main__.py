@@ -88,7 +88,7 @@ def process(args):
                      size=args.representation_size,
                      window=args.window_size, min_count=0, workers=args.workers)
 
-  model.save_word2vec_format(args.output)
+  model.save_word2vec_format(args.output, binary=args.binary)
 
 
 def main():
@@ -142,6 +142,9 @@ def main():
 
   parser.add_argument('--workers', default=1, type=int,
                       help='Number of parallel processes.')
+
+  parser.add_argument('--binary', action='store_true',
+                      help='Save the resulting vectors in binary moded; default is False (off)')
 
 
   args = parser.parse_args()
