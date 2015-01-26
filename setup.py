@@ -20,6 +20,7 @@ requirements = [
     'argparse>=1.2.1',
     'futures>=2.1.6',
     'six>=1.7.3',
+    'gensim==0.10.1',
     'scipy>=0.7.0',
     'psutil>=2.1.1',
 ]
