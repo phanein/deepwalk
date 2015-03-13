@@ -39,7 +39,8 @@ embeddings_file = "blogcatalog.embeddings"
 matfile = "blogcatalog.mat"
 
 # 1. Load Embeddings
-model = Word2Vec.load_word2vec_format(embeddings_file, binary=False)
+model = Word2Vec.load_word2vec_format(embeddings_file, binary=False,
+                                      norm_only=False)
 
 # 2. Load labels
 mat = loadmat(matfile)
