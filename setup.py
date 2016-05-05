@@ -16,14 +16,6 @@ history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 requirements = [
     # TODO: put package requirements here
-    'wheel>=0.23.0',
-    'Cython>=0.20.2',
-    'argparse>=1.2.1',
-    'futures>=2.1.6',
-    'six>=1.7.3',
-    'gensim==0.10.1',
-    'scipy>=0.7.0',
-    'psutil>=2.1.1',
 ]
 
 test_requirements = [
