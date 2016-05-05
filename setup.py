@@ -15,6 +15,7 @@ readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 requirements = [
+    # TODO: put package requirements here
     'wheel>=0.23.0',
     'Cython>=0.20.2',
     'argparse>=1.2.1',
