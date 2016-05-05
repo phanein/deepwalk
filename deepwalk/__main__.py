@@ -23,7 +23,13 @@ import psutil
 from multiprocessing import cpu_count
 
 p = psutil.Process(os.getpid())
-p.set_cpu_affinity(list(range(cpu_count())))
+try:
+    p.set_cpu_affinity(list(range(cpu_count())))
+except AttributeError:
+    try:
+        p.cpu_affinity(list(range(cpu_count())))
+    except AttributeError:
+        pass
 
 logger = logging.getLogger(__name__)
 LOGFORMAT = "%(asctime).19s %(levelname)s %(filename)s: %(lineno)s %(message)s"
