@@ -35,7 +35,7 @@ def sparse2graph(x):
     return {str(k): [str(x) for x in v] for k,v in G.iteritems()}
 
 # 0. Files
-embeddings_file = "../blogcatalog.embeddings"
+embeddings_file = "blogcatalog.embeddings"
 matfile = "blogcatalog.mat"
 
 # 1. Load Embeddings
