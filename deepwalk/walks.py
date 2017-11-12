@@ -9,7 +9,7 @@ from collections import Counter
 
 from six.moves import zip
 
-from deepwalk import graph
+import graph
 
 logger = logging.getLogger("deepwalk")
 
@@ -55,16 +55,14 @@ def _write_walks_to_disk(args):
   with open(f, 'w') as fout:
     for walk in graph.build_deepwalk_corpus_iter(G=G, num_paths=num_paths, path_length=path_length,
                                                  alpha=alpha, rand=rand):
-      fout.write(u"{}\n".format(u" ".join(__vertex2str[v] for v in walk)))
+      fout.write(u"{}\n".format(u" ".join(v for v in walk)))
   logger.debug("Generated new file {}, it took {} seconds".format(f, time() - t_0))
   return f
 
 def write_walks_to_disk(G, filebase, num_paths, path_length, alpha=0, rand=random.Random(0), num_workers=cpu_count(),
                         always_rebuild=True):
   global __current_graph
-  global __vertex2str
   __current_graph = G
-  __vertex2str = {v:str(v) for v in G.nodes()}
   files_list = ["{}.{}".format(filebase, str(x)) for x in xrange(num_paths)]
   expected_size = len(G)
   args_list = []
@@ -88,6 +86,15 @@ def write_walks_to_disk(G, filebase, num_paths, path_length, alpha=0, rand=rando
       files.append(file_)
 
   return files
+
+class WalksCorpus(object):
+  def __init__(self, file_list):
+    self.file_list = file_list
+  def __iter__(self):
+    for file in self.file_list:
+      with open(file, 'r') as f:
+        for line in f:
+          yield line.split()
 
 def combine_files_iter(file_list):
   for file in file_list:

@@ -4,7 +4,6 @@
 
 __author__      = "Bryan Perozzi"
 
-
 import numpy
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -12,9 +11,10 @@ from itertools import izip
 from sklearn.metrics import f1_score
 from scipy.io import loadmat
 from sklearn.utils import shuffle as skshuffle
+from sklearn.preprocessing import MultiLabelBinarizer
 
 from collections import defaultdict
-from gensim.models import Word2Vec
+from gensim.models import Word2Vec, KeyedVectors
 
 class TopKRanker(OneVsRestClassifier):
     def predict(self, X, top_k_list):
@@ -39,14 +39,15 @@ embeddings_file = "blogcatalog.embeddings"
 matfile = "blogcatalog.mat"
 
 # 1. Load Embeddings
-model = Word2Vec.load_word2vec_format(embeddings_file, binary=False,
-                                      norm_only=False)
+model = KeyedVectors.load_word2vec_format(embeddings_file, binary=False)
 
 # 2. Load labels
 mat = loadmat(matfile)
 A = mat['network']
 graph = sparse2graph(A)
 labels_matrix = mat['group']
+labels_count = labels_matrix.shape[1]
+mlb = MultiLabelBinarizer(xrange(labels_count))
 
 # Map nodes to their features (note:  assumes nodes are labeled as integers 1:N)
 features_matrix = numpy.asarray([model[str(node)] for node in range(len(graph))])
@@ -85,23 +86,23 @@ for train_percent in training_percents:
     X_test = X[training_size:, :]
     y_test_ = y[training_size:]
 
-    y_test = [[] for x in xrange(y_test_.shape[0])]
+    y_test = [[] for _ in xrange(y_test_.shape[0])]
 
     cy =  y_test_.tocoo()
     for i, j in izip(cy.row, cy.col):
         y_test[i].append(j)
 
     clf = TopKRanker(LogisticRegression())
-    clf.fit(X_train, y_train)
+    clf.fit(X_train, y_train_)
 
     # find out how many labels should be predicted
     top_k_list = [len(l) for l in y_test]
     preds = clf.predict(X_test, top_k_list)
 
     results = {}
-    averages = ["micro", "macro", "samples", "weighted"]
+    averages = ["micro", "macro"]
     for average in averages:
-        results[average] = f1_score(y_test,  preds, average=average)
+        results[average] = f1_score(mlb.fit_transform(y_test), mlb.fit_transform(preds), average=average)
 
     all_results[train_percent].append(results)
 

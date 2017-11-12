@@ -10,8 +10,8 @@ from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 import logging
 
-from deepwalk import graph
-from deepwalk import walks as serialized_walks
+import graph
+import walks as serialized_walks
 from gensim.models import Word2Vec
 from skipgram import Skipgram
 
@@ -72,7 +72,7 @@ def process(args):
     walks = graph.build_deepwalk_corpus(G, num_paths=args.number_walks,
                                         path_length=args.walk_length, alpha=0, rand=random.Random(args.seed))
     print("Training...")
-    model = Word2Vec(walks, size=args.representation_size, window=args.window_size, min_count=0, workers=args.workers)
+    model = Word2Vec(walks, size=args.representation_size, window=args.window_size, min_count=0, sg=1, hs=1, workers=args.workers)
   else:
     print("Data size {} is larger than limit (max-memory-data-size: {}).  Dumping walks to disk.".format(data_size, args.max_memory_data_size))
     print("Walking...")
@@ -90,11 +90,12 @@ def process(args):
       vertex_counts = G.degree(nodes=G.iterkeys())
 
     print("Training...")
-    model = Skipgram(sentences=serialized_walks.combine_files_iter(walk_files), vocabulary_counts=vertex_counts,
+    walks_corpus = serialized_walks.WalksCorpus(walk_files)
+    model = Skipgram(sentences=walks_corpus, vocabulary_counts=vertex_counts,
                      size=args.representation_size,
-                     window=args.window_size, min_count=0, workers=args.workers)
+                     window=args.window_size, min_count=0, trim_rule=None, workers=args.workers)
 
-  model.save_word2vec_format(args.output)
+  model.wv.save_word2vec_format(args.output)
 
 
 def main():

@@ -148,7 +148,7 @@ class Graph(defaultdict):
           path.append(path[0])
       else:
         break
-    return path
+    return [str(node) for node in path]
 
 # TODO add build_walks in here
 
