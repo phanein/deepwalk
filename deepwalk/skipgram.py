@@ -20,7 +20,7 @@ class Skipgram(Word2Vec):
         kwargs["workers"] = kwargs.get("workers", cpu_count())
         kwargs["size"] = kwargs.get("size", 128)
         kwargs["sentences"] = kwargs.get("sentences", None)
-        kwaargs["window"] = kwargs.get("window", 10),
+        kwargs["window"] = kwargs.get("window", 10)
         kwargs["sg"] = 1
         kwargs["hs"] = 1
 
