@@ -44,7 +44,7 @@ Usage
 Evaluation
 ----------
 Here, we will show how to evaluate DeepWalk on the *BlogCatalog* dataset used in the DeepWalk paper.
-First, we run the following command to learn its DeepWalk embeddings::
+First, we run the following command to produce its DeepWalk embeddings::
 
     deepwalk --format mat --input example_graphs/blogcatalog.mat
     --max-memory-data-size 0 --number-walks 80 --representation-size 128 --walk-length 40 --window-size 10
@@ -53,7 +53,6 @@ First, we run the following command to learn its DeepWalk embeddings::
 The parameters specified here are the same as in the paper.
 If you are using a multi-core machine, try to set ``--workers`` to a larger number for faster training.
 On a single machine with 24 Xeon E5-2620 @ 2.00GHz CPUs, this command takes about 20 minutes to finish (``--workers`` is set to 20).
-
 Then, we evaluate the learned embeddings on a multi-label node classification task with ``example_graphs/scoring.py``::
 
     python example_graphs/scoring.py --emb example_graphs/blogcatalog.embeddings
@@ -70,7 +69,7 @@ This command finishes in 8 minutes on the same machine. For faster evaluation, y
 | *Macro-F1 (%)*  | 21.08 | 23.98 | 25.71 | 26.73 | 27.68 | 28.28 | 28.88 | 28.70 | 28.21 |
 +-----------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
 
-**Note that the current version of DeepWalk is based on a newer version of gensim, which may have a different implementation of the word2vec model. To completely reproduce the results in our paper, you will probably have to install an older version of gensim(``gensim==0.10.2``).**
+**Note that the current version of DeepWalk is based on a newer version of gensim, which may have a different implementation of the word2vec model. To completely reproduce the results in our paper, you will probably have to install an older version of gensim(version 0.10.2).**
 
 Requirements
 ------------
