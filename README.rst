@@ -26,7 +26,7 @@ Usage
         1 4
         ...
     
-    3. ``--format mat`` for a Matlab MAT file containing an adjacency matrix
+    3. ``--format mat`` for a Matlab .mat file containing an adjacency matrix
         (note, you must also specify the variable name of the adjacency matrix ``--matfile-variable-name``)
 
 **--output**: *output_filename*
@@ -40,6 +40,37 @@ Usage
 
 **Full Command List**
     The full list of command line options is available with ``$deepwalk --help``
+
+Evaluation
+----------
+Here, we will show how to evaluate DeepWalk on the *BlogCatalog* dataset used in the DeepWalk paper.
+First, we run the following command to learn its DeepWalk embeddings::
+
+    deepwalk --format mat --input example_graphs/blogcatalog.mat
+    --max-memory-data-size 0 --number-walks 80 --representation-size 128 --walk-length 40 --window-size 10
+    --workers 1 --output example_graphs/blogcatalog.embeddings
+
+The parameters specified here are the same as in the paper.
+If you are using a multi-core machine, try to set ``--workers`` to a larger number for faster training.
+On a single machine with 24 Xeon E5-2620 @ 2.00GHz CPUs, this command takes about 20 minutes to finish (``--workers`` is set to 20).
+
+Then, we evaluate the learned embeddings on a multi-label node classification task with ``example_graphs/scoring.py``::
+
+    python example_graphs/scoring.py --emb example_graphs/blogcatalog.embeddings
+    --network example_graphs/blogcatalog.mat
+    --num-shuffle 10 --all
+
+This command finishes in 8 minutes on the same machine. For faster evaluation, you can set ``--num-shuffle`` to a smaller number, but expect more fluctuation in performance. The micro F1 and macro F1 scores we get with different ratio of labeled nodes are as follows:
+
++-----------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| % Labeled Nodes | 10%   | 20%   | 30%   | 40%   | 50%   | 60%   | 70%   | 80%   | 90%   |
++=================+=======+=======+=======+=======+=======+=======+=======+=======+=======+
+| *Micro-F1 (%)*  | 35.86 | 38.51 | 39.96 | 40.76 | 41.51 | 41.85 | 42.27 | 42.35 | 42.40 |
++-----------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| *Macro-F1 (%)*  | 21.08 | 23.98 | 25.71 | 26.73 | 27.68 | 28.28 | 28.88 | 28.70 | 28.21 |
++-----------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+
+**Note that the current version of DeepWalk is based on a newer version of gensim, which may have a different implementation of the word2vec model. To completely reproduce the results in our paper, you will probably have to install an older version of gensim(``gensim==0.10.2``).**
 
 Requirements
 ------------
