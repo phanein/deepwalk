@@ -9,7 +9,7 @@ from collections import Counter
 
 from six.moves import zip
 
-import graph
+from . import graph
 
 logger = logging.getLogger("deepwalk")
 
