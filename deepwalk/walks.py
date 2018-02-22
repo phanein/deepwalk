@@ -63,7 +63,7 @@ def write_walks_to_disk(G, filebase, num_paths, path_length, alpha=0, rand=rando
                         always_rebuild=True):
   global __current_graph
   __current_graph = G
-  files_list = ["{}.{}".format(filebase, str(x)) for x in xrange(num_paths)]
+  files_list = ["{}.{}".format(filebase, str(x)) for x in list(range(num_paths))]
   expected_size = len(G)
   args_list = []
   files = []
@@ -71,7 +71,7 @@ def write_walks_to_disk(G, filebase, num_paths, path_length, alpha=0, rand=rando
   if num_paths <= num_workers:
     paths_per_worker = [1 for x in range(num_paths)]
   else:
-    paths_per_worker = [len(filter(lambda z: z!= None, [y for y in x]))
+    paths_per_worker = [len(list(filter(lambda z: z!= None, [y for y in x])))
                         for x in graph.grouper(int(num_paths / num_workers)+1, range(1, num_paths+1))]
 
   with ProcessPoolExecutor(max_workers=num_workers) as executor:
