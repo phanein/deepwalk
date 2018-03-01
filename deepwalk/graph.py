@@ -137,7 +137,7 @@ class Graph(defaultdict):
       path = [start]
     else:
       # Sampling is uniform w.r.t V, and not w.r.t E
-      path = [rand.choice(G.keys())]
+      path = [rand.choice(list(G.keys()))]
 
     while len(path) < path_length:
       cur = path[-1]
