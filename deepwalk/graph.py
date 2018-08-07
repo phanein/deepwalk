@@ -205,7 +205,7 @@ def parse_adjacencylist_unchecked(f):
   
   return adjlist
 
-def load_adjacencylist(file_, undirected=False, chunksize=10000, unchecked=True):
+def load_adjacencylist(file_, undirected=False, chunksize=10000, unchecked=True, use_multiprocessing=False):
 
   if unchecked:
     parse_func = parse_adjacencylist_unchecked
@@ -217,13 +217,18 @@ def load_adjacencylist(file_, undirected=False, chunksize=10000, unchecked=True)
   adjlist = []
 
   t0 = time()
-
+  
+  total = 0 
   with open(file_) as f:
-    with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
-      total = 0 
-      for idx, adj_chunk in enumerate(executor.map(parse_func, grouper(int(chunksize), f))):
-          adjlist.extend(adj_chunk)
-          total += len(adj_chunk)
+    if use_multiprocessing:
+      with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
+        for idx, adj_chunk in enumerate(executor.map(parse_func, grouper(int(chunksize), f))):
+            adjlist.extend(adj_chunk)
+            total += len(adj_chunk)
+    else:
+      for idx, adj_chunk in enumerate(map(parse_func, grouper(int(chunksize), f))):
+            adjlist.extend(adj_chunk)
+            total += len(adj_chunk)
   
   t1 = time()
 
