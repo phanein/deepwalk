@@ -12,17 +12,11 @@ from glob import glob
 from six.moves import range, zip, zip_longest
 from six import iterkeys
 from collections import defaultdict, Iterable
-from multiprocessing import cpu_count
 import random
 from random import shuffle
 from itertools import product,permutations
 from scipy.io import loadmat
 from scipy.sparse import issparse
-
-from concurrent.futures import ProcessPoolExecutor
-
-from multiprocessing import Pool
-from multiprocessing import cpu_count
 
 logger = logging.getLogger("deepwalk")
 
@@ -205,7 +199,7 @@ def parse_adjacencylist_unchecked(f):
   
   return adjlist
 
-def load_adjacencylist(file_, undirected=False, chunksize=10000, unchecked=True, use_multiprocessing=False):
+def load_adjacencylist(file_, undirected=False, chunksize=10000, unchecked=True):
 
   if unchecked:
     parse_func = parse_adjacencylist_unchecked
@@ -220,15 +214,9 @@ def load_adjacencylist(file_, undirected=False, chunksize=10000, unchecked=True,
   
   total = 0 
   with open(file_) as f:
-    if use_multiprocessing:
-      with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
-        for idx, adj_chunk in enumerate(executor.map(parse_func, grouper(int(chunksize), f))):
-            adjlist.extend(adj_chunk)
-            total += len(adj_chunk)
-    else:
-      for idx, adj_chunk in enumerate(map(parse_func, grouper(int(chunksize), f))):
-            adjlist.extend(adj_chunk)
-            total += len(adj_chunk)
+    for idx, adj_chunk in enumerate(map(parse_func, grouper(int(chunksize), f))):
+      adjlist.extend(adj_chunk)
+      total += len(adj_chunk)
   
   t1 = time()
 
