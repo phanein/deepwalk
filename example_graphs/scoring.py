@@ -7,7 +7,7 @@ __author__      = "Bryan Perozzi"
 import numpy
 import sys
 
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, ArgumentError
 from collections import defaultdict
 from gensim.models import Word2Vec, KeyedVectors
 from six import iteritems
@@ -15,6 +15,8 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score
 from scipy.io import loadmat
+from numpy import genfromtxt
+from scipy.sparse import csr_matrix
 from sklearn.utils import shuffle as skshuffle
 from sklearn.preprocessing import MultiLabelBinarizer
 
@@ -41,12 +43,16 @@ def main():
                           formatter_class=ArgumentDefaultsHelpFormatter,
                           conflict_handler='resolve')
   parser.add_argument("--emb", required=True, help='Embeddings file')
-  parser.add_argument("--network", required=True,
+  parser.add_argument("--network",
                       help='A .mat file containing the adjacency matrix and node labels of the input network.')
   parser.add_argument("--adj-matrix-name", default='network',
                       help='Variable name of the adjacency matrix inside the .mat file.')
   parser.add_argument("--label-matrix-name", default='group',
                       help='Variable name of the labels matrix inside the .mat file.')
+  parser.add_argument("--labels",
+                      help='A CSV file of graph labels. The line number represents the node ID. Each class is a column.')
+  parser.add_argument("--labels-sep",
+                      help='Separator in labels CSV file. Default: "%(default)s"', type=str, default=',')
   parser.add_argument("--num-shuffles", default=2, type=int, help='Number of shuffles.')
   parser.add_argument("--all", default=False, action='store_true',
                       help='The embeddings are evaluated on all training percents from 10 to 90 when this flag is set to true. '
@@ -61,15 +67,21 @@ def main():
   model = KeyedVectors.load_word2vec_format(embeddings_file, binary=False)
   
   # 2. Load labels
-  mat = loadmat(matfile)
-  A = mat[args.adj_matrix_name]
-  graph = sparse2graph(A)
-  labels_matrix = mat[args.label_matrix_name]
+  if args.network: # Matlab file is given
+    mat = loadmat(matfile)
+    labels_matrix = mat[args.label_matrix_name]
+  elif args.labels: # CSV file is given
+    # The format should be: Node ID == line number. Each class is a column, values either 0 or 1
+    labels_matrix = csr_matrix(genfromtxt(args.labels, delimiter=args.labels_sep))
+  else:
+    raise ArgumentError("Either --network or --labels must be given.")
+
+  num_nodes = labels_matrix.shape[0]
   labels_count = labels_matrix.shape[1]
   mlb = MultiLabelBinarizer(range(labels_count))
   
   # Map nodes to their features (note:  assumes nodes are labeled as integers 1:N)
-  features_matrix = numpy.asarray([model[str(node)] for node in range(len(graph))])
+  features_matrix = numpy.asarray([model[str(node)] for node in range(num_nodes)])
   
   # 2. Shuffle, to create train/test groups
   shuffles = []
