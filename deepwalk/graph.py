@@ -56,7 +56,7 @@ class Graph(defaultdict):
           self[other].append(v)
     
     t1 = time()
-    logger.info('make_directed: added missing edges {}s'.format(t1-t0))
+    logger.info('make_directed: added missing edges %.2f seconds', t1 - t0)
 
     self.make_consistent()
     return self
@@ -67,7 +67,7 @@ class Graph(defaultdict):
       self[k] = list(sorted(set(self[k])))
     
     t1 = time()
-    logger.info('make_consistent: made consistent in {}s'.format(t1-t0))
+    logger.info('make_consistent: made consistent in %.2f seconds', t1 - t0)
 
     self.remove_self_loops()
 
@@ -85,7 +85,7 @@ class Graph(defaultdict):
     
     t1 = time()
 
-    logger.info('remove_self_loops: removed {} loops in {}s'.format(removed, (t1-t0)))
+    logger.info('remove_self_loops: removed %s loops in %.2f seconds', removed, t1 - t0)
     return self
 
   def check_self_loops(self):
@@ -220,19 +220,19 @@ def load_adjacencylist(file_, undirected=False, chunksize=10000, unchecked=True)
   
   t1 = time()
 
-  logger.info('Parsed {} edges with {} chunks in {}s'.format(total, idx, t1-t0))
+  logger.info('Parsed %s edges with %s chunks in %.2f seconds', total, idx, t1-t0)
 
   t0 = time()
   G = convert_func(adjlist)
   t1 = time()
 
-  logger.info('Converted edges to graph in {}s'.format(t1-t0))
+  logger.info('Converted edges to graph in %.2f seconds', t1 - t0)
 
   if undirected:
     t0 = time()
     G = G.make_undirected()
     t1 = time()
-    logger.info('Made graph undirected in {}s'.format(t1-t0))
+    logger.info('Made graph undirected in %.2f seconds', t1 - t0)
 
   return G 
 
