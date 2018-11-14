@@ -14,6 +14,7 @@ from . import graph
 from . import walks as serialized_walks
 from gensim.models import Word2Vec
 from .skipgram import Skipgram
+from . import phrases
 
 from six import text_type as unicode
 from six import iteritems
@@ -71,6 +72,11 @@ def process(args):
     print("Walking...")
     walks = graph.build_deepwalk_corpus(G, num_paths=args.number_walks,
                                         path_length=args.walk_length, alpha=0, rand=random.Random(args.seed))
+
+    if args.ngram > 1:
+        print("Building n-gram with n="+str(args.ngram)+"...")
+        walks = phrases.build_ngram(walks, args.ngram)
+
     print("Training...")
     model = Word2Vec(walks, size=args.representation_size, window=args.window_size, min_count=0, sg=1, hs=1, workers=args.workers)
   else:
@@ -89,8 +95,13 @@ def process(args):
       # use degree distribution for frequency in tree
       vertex_counts = G.degree(nodes=G.iterkeys())
 
-    print("Training...")
     walks_corpus = serialized_walks.WalksCorpus(walk_files)
+
+    if args.ngram > 1:
+        print("Building n-gram with n="+str(args.ngram)+"...")
+        walks_corpus = phrases.build_ngram(walks_corpus, args.ngram)
+
+    print("Training...")
     model = Skipgram(sentences=walks_corpus, vocabulary_counts=vertex_counts,
                      size=args.representation_size,
                      window=args.window_size, min_count=0, trim_rule=None, workers=args.workers)
@@ -150,6 +161,8 @@ def main():
   parser.add_argument('--workers', default=1, type=int,
                       help='Number of parallel processes.')
 
+  parser.add_argument('--ngram',  default=1, type=int,
+                      help='N of n-grams, e.g.: set 2 for bigrams, 3 for trigrams, etc.')
 
   args = parser.parse_args()
   numeric_level = getattr(logging, args.log.upper(), None)
