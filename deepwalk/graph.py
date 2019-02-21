@@ -117,7 +117,7 @@ class Graph(defaultdict):
 
   def number_of_nodes(self):
     "Returns the number of nodes in the graph"
-    return order()
+    return self.order()
 
   def random_walk(self, path_length, alpha=0, rand=random.Random(), start=None):
     """ Returns a truncated random walk.
