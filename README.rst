@@ -77,14 +77,14 @@ Requirements
 * scipy
 
 (may have to be independently installed) 
-
+or `pip install -r requirements.txt` to install all dependencies
 
 
 Installation
 ------------
-#. cd deepwalk
-#. pip install -r requirements.txt 
-#. python setup.py install
+1. `cd deepwalk`
+2. `pip install -r requirements.txt`
+3. `python setup.py install`
 
 
 Citing
@@ -115,9 +115,6 @@ Misc
 DeepWalk - Online learning of social representations.
 
 * Free software: GPLv3 license
-* Documentation: http://deepwalk.readthedocs.org.
-
-
 
 .. image:: https://badge.fury.io/py/deepwalk.png
     :target: http://badge.fury.io/py/deepwalk
