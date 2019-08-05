@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 import logging
 from io import open
 from os import path
@@ -55,7 +56,7 @@ def _write_walks_to_disk(args):
   with open(f, 'w') as fout:
     for walk in graph.build_deepwalk_corpus_iter(G=G, num_paths=num_paths, path_length=path_length,
                                                  alpha=alpha, rand=rand):
-      fout.write(u"{}\n".format(u" ".join(v for v in walk)))
+      print(" ".join(str(v) for v in walk), file=fout)
   logger.debug("Generated new file {}, it took {} seconds".format(f, time() - t_0))
   return f
 
@@ -82,8 +83,13 @@ def write_walks_to_disk(G, filebase, num_paths, path_length, alpha=0, rand=rando
         files.append(file_)
 
   with ProcessPoolExecutor(max_workers=num_workers) as executor:
-    for file_ in executor.map(_write_walks_to_disk, args_list):
-      files.append(file_)
+    file_ = None
+    try:
+      for file_ in executor.map(_write_walks_to_disk, args_list):
+        files.append(file_)
+    except TypeError as err:
+      logger.error('ERROR: {}, file_: {}, args_list: {}'.format(err, file_, args_list))
+      raise
 
   return files
 
