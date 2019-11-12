@@ -262,7 +262,7 @@ def load_matfile(file_, variable_name="network", undirected=True):
 def from_networkx(G_input, undirected=True):
     G = Graph()
 
-    for idx, x in enumerate(G_input.nodes_iter()):
+    for idx, x in enumerate(G_input.nodes()):
         for y in iterkeys(G_input[x]):
             G[x].append(y)
 
