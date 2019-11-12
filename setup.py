@@ -18,7 +18,7 @@ requirements = [
     'wheel>=0.23.0',
     'Cython>=0.20.2',
     'argparse>=1.2.1',
-    'futures>=2.1.6',
+    'futures>=2.1.6; python_version == "2.7"',
     'six>=1.7.3',
     'gensim>=1.0.0',
     'scipy>=0.15.0',
