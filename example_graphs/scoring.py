@@ -17,6 +17,7 @@ from sklearn.metrics import f1_score
 from scipy.io import loadmat
 from sklearn.utils import shuffle as skshuffle
 from sklearn.preprocessing import MultiLabelBinarizer
+import pickle
 
 class TopKRanker(OneVsRestClassifier):
     def predict(self, X, top_k_list):
@@ -51,11 +52,13 @@ def main():
   parser.add_argument("--all", default=False, action='store_true',
                       help='The embeddings are evaluated on all training percents from 10 to 90 when this flag is set to true. '
                       'By default, only training percents of 10, 50 and 90 are used.')
+  parser.add_argument("--result", required=True, help='Where the results will be stored')       
 
   args = parser.parse_args()
   # 0. Files
   embeddings_file = args.emb
   matfile = args.network
+  resultfile = args.result
   
   # 1. Load Embeddings
   model = KeyedVectors.load_word2vec_format(embeddings_file, binary=False)
@@ -124,6 +127,9 @@ def main():
           results[average] = f1_score(mlb.fit_transform(y_test), mlb.fit_transform(preds), average=average)
   
       all_results[train_percent].append(results)
+  f = open(resultfile,"wb")
+  pickle.dump(all_results,f)
+  f.close()
   
   print ('Results, using embeddings of dimensionality', X.shape[1])
   print ('-------------------')
