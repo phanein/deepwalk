@@ -8,6 +8,7 @@ from io import open
 from argparse import ArgumentParser, FileType, ArgumentDefaultsHelpFormatter
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
+from itertools import tee
 import logging
 
 from . import graph
@@ -97,10 +98,17 @@ def process(args):
       vertex_counts = G.degree(nodes=G.iterkeys())
 
     print("Training...")
-    walks_corpus = serialized_walks.WalksCorpus(walk_files)
-    model = Skipgram(sentences=walks_corpus, vocabulary_counts=vertex_counts,
-                     size=args.representation_size,
+    vocab_walks_corpus, train_walks_corpus = tee(serialized_walks.WalksCorpus(walk_files), 2)
+
+    model = Skipgram(vocabulary_counts=vertex_counts, size=args.representation_size,
                      window=args.window_size, min_count=0, trim_rule=None, workers=args.workers)
+    model.build_vocab(vocab_walks_corpus)
+    total_examples = model.corpus_count
+    if args.embeddings is not None:
+      pretrained_embeddings = KeyedVectors.load_word2vec_format(args.embeddings, binary=False)
+      model.build_vocab([list(pretrained_embeddings.vocab.keys())], update=True)
+      model.intersect_word2vec_format(args.embeddings, binary=False, lockf=1.0)
+    model.train(train_walks_corpus, total_examples=total_examples, epochs=model.iter)
 
   model.wv.save_word2vec_format(args.output)
 
