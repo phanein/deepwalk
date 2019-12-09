@@ -12,7 +12,7 @@ import logging
 
 from . import graph
 from . import walks as serialized_walks
-from gensim.models import Word2Vec
+from gensim.models import Word2Vec, KeyedVectors
 from .skipgram import Skipgram
 
 from six import text_type as unicode
@@ -72,7 +72,14 @@ def process(args):
     walks = graph.build_deepwalk_corpus(G, num_paths=args.number_walks,
                                         path_length=args.walk_length, alpha=0, rand=random.Random(args.seed))
     print("Training...")
-    model = Word2Vec(walks, size=args.representation_size, window=args.window_size, min_count=0, sg=1, hs=1, workers=args.workers)
+    model = Word2Vec(size=args.representation_size, window=args.window_size, min_count=0, sg=1, hs=1, workers=args.workers)
+    model.build_vocab(walks)
+    total_examples = model.corpus_count
+    if args.embeddings is not None:
+      pretrained_embeddings = KeyedVectors.load_word2vec_format(args.embeddings, binary=False)
+      model.build_vocab([list(pretrained_embeddings.vocab.keys())], update=True)
+      model.intersect_word2vec_format(args.embeddings, binary=False, lockf=1.0)
+    model.train(walks, total_examples=total_examples, epochs=model.iter)
   else:
     print("Data size {} is larger than limit (max-memory-data-size: {}).  Dumping walks to disk.".format(data_size, args.max_memory_data_size))
     print("Walking...")
@@ -149,6 +156,9 @@ def main():
 
   parser.add_argument('--workers', default=1, type=int,
                       help='Number of parallel processes.')
+
+  parser.add_argument('--pretrained', nargs='?',
+                      help='Pre-trained embeddings file')
 
 
   args = parser.parse_args()
