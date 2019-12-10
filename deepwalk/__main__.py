@@ -76,10 +76,10 @@ def process(args):
     model = Word2Vec(size=args.representation_size, window=args.window_size, min_count=0, sg=1, hs=1, workers=args.workers)
     model.build_vocab(walks)
     total_examples = model.corpus_count
-    if args.embeddings is not None:
-      pretrained_embeddings = KeyedVectors.load_word2vec_format(args.embeddings, binary=False)
+    if args.pretrained is not None:
+      pretrained_embeddings = KeyedVectors.load_word2vec_format(args.pretrained, binary=False)
       model.build_vocab([list(pretrained_embeddings.vocab.keys())], update=True)
-      model.intersect_word2vec_format(args.embeddings, binary=False, lockf=1.0)
+      model.intersect_word2vec_format(args.pretrained, binary=False, lockf=1.0)
     model.train(walks, total_examples=total_examples, epochs=model.iter)
   else:
     print("Data size {} is larger than limit (max-memory-data-size: {}).  Dumping walks to disk.".format(data_size, args.max_memory_data_size))
@@ -104,10 +104,10 @@ def process(args):
                      window=args.window_size, min_count=0, trim_rule=None, workers=args.workers)
     model.build_vocab(vocab_walks_corpus)
     total_examples = model.corpus_count
-    if args.embeddings is not None:
-      pretrained_embeddings = KeyedVectors.load_word2vec_format(args.embeddings, binary=False)
+    if args.pretrained is not None:
+      pretrained_embeddings = KeyedVectors.load_word2vec_format(args.pretrained, binary=False)
       model.build_vocab([list(pretrained_embeddings.vocab.keys())], update=True)
-      model.intersect_word2vec_format(args.embeddings, binary=False, lockf=1.0)
+      model.intersect_word2vec_format(args.pretrained, binary=False, lockf=1.0)
     model.train(train_walks_corpus, total_examples=total_examples, epochs=model.iter)
 
   model.wv.save_word2vec_format(args.output)
