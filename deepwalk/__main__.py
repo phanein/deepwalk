@@ -166,7 +166,7 @@ def main():
                       help='Number of parallel processes.')
 
   parser.add_argument('--pretrained', nargs='?',
-                      help='Pre-trained embeddings file')
+                      help='Pre-trained embeddings file in the “word2vec C format”.')
 
 
   args = parser.parse_args()
