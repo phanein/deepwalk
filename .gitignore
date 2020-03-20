@@ -1,4 +1,5 @@
 *.py[cod]
+twitter_edges.edgelist
 
 # C extensions
 *.so
