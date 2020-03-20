@@ -50,7 +50,7 @@ class Graph(defaultdict):
   
     t0 = time()
 
-    for v in self.keys():
+    for v in list(self):
       for other in self[v]:
         if v != other:
           self[other].append(v)
