@@ -8,11 +8,12 @@ from io import open
 from argparse import ArgumentParser, FileType, ArgumentDefaultsHelpFormatter
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
+from itertools import tee
 import logging
 
 from . import graph
 from . import walks as serialized_walks
-from gensim.models import Word2Vec
+from gensim.models import Word2Vec, KeyedVectors
 from .skipgram import Skipgram
 
 from six import text_type as unicode
@@ -72,7 +73,14 @@ def process(args):
     walks = graph.build_deepwalk_corpus(G, num_paths=args.number_walks,
                                         path_length=args.walk_length, alpha=0, rand=random.Random(args.seed))
     print("Training...")
-    model = Word2Vec(walks, size=args.representation_size, window=args.window_size, min_count=0, sg=1, hs=1, workers=args.workers)
+    model = Word2Vec(size=args.representation_size, window=args.window_size, min_count=0, sg=1, hs=1, workers=args.workers)
+    model.build_vocab(walks)
+    total_examples = model.corpus_count
+    if args.pretrained is not None:
+      pretrained_embeddings = KeyedVectors.load_word2vec_format(args.pretrained, binary=False)
+      model.build_vocab([list(pretrained_embeddings.vocab.keys())], update=True)
+      model.intersect_word2vec_format(args.pretrained, binary=False, lockf=1.0)
+    model.train(walks, total_examples=total_examples, epochs=model.iter)
   else:
     print("Data size {} is larger than limit (max-memory-data-size: {}).  Dumping walks to disk.".format(data_size, args.max_memory_data_size))
     print("Walking...")
@@ -90,10 +98,17 @@ def process(args):
       vertex_counts = G.degree(nodes=G.iterkeys())
 
     print("Training...")
-    walks_corpus = serialized_walks.WalksCorpus(walk_files)
-    model = Skipgram(sentences=walks_corpus, vocabulary_counts=vertex_counts,
-                     size=args.representation_size,
+    vocab_walks_corpus, train_walks_corpus = tee(serialized_walks.WalksCorpus(walk_files), 2)
+
+    model = Skipgram(vocabulary_counts=vertex_counts, size=args.representation_size,
                      window=args.window_size, min_count=0, trim_rule=None, workers=args.workers)
+    model.build_vocab(vocab_walks_corpus)
+    total_examples = model.corpus_count
+    if args.pretrained is not None:
+      pretrained_embeddings = KeyedVectors.load_word2vec_format(args.pretrained, binary=False)
+      model.build_vocab([list(pretrained_embeddings.vocab.keys())], update=True)
+      model.intersect_word2vec_format(args.pretrained, binary=False, lockf=1.0)
+    model.train(train_walks_corpus, total_examples=total_examples, epochs=model.iter)
 
   model.wv.save_word2vec_format(args.output)
 
@@ -127,9 +142,6 @@ def main():
   parser.add_argument('--output', required=True,
                       help='Output representation file')
 
-  parser.add_argument('--representation-size', default=64, type=int,
-                      help='Number of latent dimensions to learn for each node.')
-
   parser.add_argument('--seed', default=0, type=int,
                       help='Seed for random walk generator.')
 
@@ -150,6 +162,15 @@ def main():
   parser.add_argument('--workers', default=1, type=int,
                       help='Number of parallel processes.')
 
+  # The --representation-size and --pretrained flags are mutually exclusive in
+  # order to avoid vector dimensions that don't match
+  representation_size_group = parser.add_mutually_exclusive_group(required=True)
+
+  representation_size_group.add_argument('--representation-size', default=64, type=int,
+                                         help='Number of latent dimensions to learn for each node.')
+
+  representation_size_group.add_argument('--pretrained', nargs='?',
+                                         help='Pre-trained embeddings file in the “word2vec C format”.')
 
   args = parser.parse_args()
   numeric_level = getattr(logging, args.log.upper(), None)
