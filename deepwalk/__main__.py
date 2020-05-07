@@ -71,6 +71,11 @@ def process(args):
     print("Walking...")
     walks = graph.build_deepwalk_corpus(G, num_paths=args.number_walks,
                                         path_length=args.walk_length, alpha=0, rand=random.Random(args.seed))
+
+    # If we are only asked to write walks to disk do that and buzz off.
+    if args.only_walk:
+        return
+
     print("Training...")
     model = Word2Vec(walks, size=args.representation_size, window=args.window_size, min_count=0, sg=1, hs=1, workers=args.workers)
   else:
@@ -81,6 +86,10 @@ def process(args):
     walk_files = serialized_walks.write_walks_to_disk(G, walks_filebase, num_paths=args.number_walks,
                                          path_length=args.walk_length, alpha=0, rand=random.Random(args.seed),
                                          num_workers=args.workers)
+
+    # If we are only asked to write walks to disk do that and buzz off.
+    if args.only_walk:
+        return
 
     print("Counting vertex frequency...")
     if not args.vertex_freq_degree:
@@ -149,6 +158,9 @@ def main():
 
   parser.add_argument('--workers', default=1, type=int,
                       help='Number of parallel processes.')
+
+  parser.add_argument('--only-walk', dest="only_walk", action="store_true", default=False,
+                      help='Dont train. Only walk.')
 
 
   args = parser.parse_args()
