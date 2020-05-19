@@ -4,6 +4,8 @@ DeepWalk
 
 DeepWalk uses short random walks to learn representations for vertices in graphs.
 
+  This implementation extends the original `DeepWalk <https://github.com/phanein/deepwalk>`_ v.1.0.3 with numerical walk items besides the ``str``, which is required by `HARP (AAAI 2018) <https://github.com/eXascaleInfolab/HARP>`_ and overall provides efficient graph node embedding, where the nodes are specified by numerical ids.
+
 Usage
 -----
 
