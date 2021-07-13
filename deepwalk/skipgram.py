@@ -3,11 +3,10 @@ from concurrent.futures import ProcessPoolExecutor
 import logging
 from multiprocessing import cpu_count
 from six import string_types
-
 from gensim.models import Word2Vec
-from gensim.models.word2vec import Vocab
 
 logger = logging.getLogger("deepwalk")
+
 
 class Skipgram(Word2Vec):
     """A subclass to allow more customization of the Word2Vec internals."""
@@ -24,7 +23,7 @@ class Skipgram(Word2Vec):
         kwargs["sg"] = 1
         kwargs["hs"] = 1
 
-        if vocabulary_counts != None:
-          self.vocabulary_counts = vocabulary_counts
+        if vocabulary_counts is not None:
+            self.vocabulary_counts = vocabulary_counts
 
         super(Skipgram, self).__init__(**kwargs)
