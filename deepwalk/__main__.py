@@ -95,10 +95,11 @@ def process(args):
                      size=args.representation_size,
                      window=args.window_size, min_count=0, trim_rule=None, workers=args.workers)
 
-  model.wv.save_word2vec_format(args.output)
+  # model.wv.save_word2vec_format(args.output)
+  return model
 
 
-def main():
+def parse_args(args=None):
   parser = ArgumentParser("deepwalk",
                           formatter_class=ArgumentDefaultsHelpFormatter,
                           conflict_handler='resolve')
@@ -124,7 +125,7 @@ def main():
   parser.add_argument('--number-walks', default=10, type=int,
                       help='Number of random walks to start at each node')
 
-  parser.add_argument('--output', required=True,
+  parser.add_argument('--output', default=None,
                       help='Output representation file')
 
   parser.add_argument('--representation-size', default=64, type=int,
@@ -150,8 +151,11 @@ def main():
   parser.add_argument('--workers', default=1, type=int,
                       help='Number of parallel processes.')
 
+  return parser.parse_args(args)
 
-  args = parser.parse_args()
+
+def main():
+  args = parse_args()
   numeric_level = getattr(logging, args.log.upper(), None)
   logging.basicConfig(format=LOGFORMAT)
   logger.setLevel(numeric_level)
@@ -159,7 +163,9 @@ def main():
   if args.debug:
    sys.excepthook = debug
 
-  process(args)
+  model = process(args)
+  if args.output is not None:
+      model.wv.save_word2vec_format(args.output)
 
 if __name__ == "__main__":
   sys.exit(main())
