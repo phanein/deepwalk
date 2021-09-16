@@ -30,7 +30,7 @@ test_requirements = [
 
 setup(
     name='deepwalk',
-    version='1.0.3',
+    version='1.1.0',
     description='DeepWalk online learning of social representations.',
     long_description=readme + '\n\n' + history,
     author='Bryan Perozzi',
@@ -39,7 +39,9 @@ setup(
     packages=[
         'deepwalk',
     ],
-    entry_points={'console_scripts': ['deepwalk = deepwalk.__main__:main']},
+    entry_points={
+        'deepwalk_group': ['run = deepwalk.__main__:main'],
+        'console_scripts': ['deepwalk = deepwalk.__main__:main']},
     package_dir={'deepwalk':
                  'deepwalk'},
     include_package_data=True,
