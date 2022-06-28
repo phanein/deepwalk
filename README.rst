@@ -4,6 +4,8 @@ DeepWalk
 
 DeepWalk uses short random walks to learn representations for vertices in graphs.
 
+Deep Walk Paper reading tutorial hand By hand(in Chinese): https://www.bilibili.com/video/BV1o94y197vf
+
 Usage
 -----
 
