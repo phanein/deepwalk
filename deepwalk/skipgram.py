@@ -5,7 +5,7 @@ from multiprocessing import cpu_count
 from six import string_types
 
 from gensim.models import Word2Vec
-from gensim.models.word2vec import Vocab
+# from gensim.models.word2vec import Vocab
 
 logger = logging.getLogger("deepwalk")
 
